@@ -51,8 +51,8 @@ export async function load() {
 		// 	};
 		// }
 
-		console.log('Generating new data for week', currentWeek);
-		const weeklyData = await runWeeklyESPN(currentWeek);
+		// console.log('Generating new data for week', currentWeek);
+		// const weeklyData = await runWeeklyESPN(currentWeek);
 
 		// Insert the new data into the database
 		// const { error: insertError } = await supabase.from('weekly_summaries').insert([
@@ -71,12 +71,12 @@ export async function load() {
 		// 	throw new Error(`Failed to save new data: ${insertError.message}`);
 		// }
 
-		fs.writeFileSync(filePath, JSON.stringify(weeklyData, null, 2));
-		console.log('New data saved to', filePath);
+		// fs.writeFileSync(filePath, JSON.stringify(weeklyData, null, 2));
+		// console.log('New data saved to', filePath);
 
-		return {
-			weeklyData
-		};
+		// return {
+		// 	weeklyData
+		// };
 	} catch (error) {
 		console.error('Error in load function:', error);
 		return {
