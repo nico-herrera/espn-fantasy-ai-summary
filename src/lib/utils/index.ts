@@ -253,9 +253,6 @@ function highestScoringTeamEspn(weeklyDf) {
 			console.warn('Invalid player score:', player);
 			return acc;
 		}
-		if (player.owner === 'Marty Cold Cutz') {
-			console.log(player, `${acc[player.owner]} points \n\n`);
-		}
 		acc[player.owner] = (acc[player.owner] || 0) + player.actual;
 		return acc;
 	}, {});
@@ -392,7 +389,7 @@ async function generateSummary(week, matchupDf) {
 
 	const overallSummary = await getClaudeSummary(
 		overallPrompt,
-		"Provide a humorous and snarky/raunchy overall summary of this week's fantasy football results. Focus on notable performances, upsets, and particularly low scores. Be extra snarky towards 'Bones Knows' and 'Matty Ice Tea' if they appear in the results."
+		"Provide a humorous and snarky overall summary of this week's fantasy football results. Sort of Bill Burr, right in your face-like. Focus on notable performances, upsets, and particularly low scores. Be extra snarky towards 'Bones Knows' and 'Matty Ice Tea' if they appear in the results."
 	);
 
 	const matchupSummaries = await Promise.all(
@@ -413,7 +410,7 @@ async function generateSummary(week, matchupDf) {
 
 			const summary = await getClaudeSummary(
 				matchupPrompt,
-				'Provide a brief, slightly sarcastic, raunchy, humorous summary of this matchup. Highlight standout performances and any notably bad scores. Keep it concise and entertaining.'
+				'Provide a brief, slightly sarcastic, humorous summary of this matchup. Highlight standout performances and any notably bad scores. Keep it concise and entertaining."'
 			);
 
 			return {

@@ -4,7 +4,10 @@ import { supabase } from '$lib/supabaseClient';
 export async function load() {
 	try {
 		const currentWeek = getNFLWeek();
-		console.log('Current week:', currentWeek);
+		if (!supabase) {
+			throw new Error('Supabase client not initialized.');
+		}
+
 		// Check if data for the current week exists in the database
 		const { data: existingData, error: fetchError } = await supabase
 			.from('weekly_summaries')
