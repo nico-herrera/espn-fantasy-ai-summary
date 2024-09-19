@@ -1,22 +1,15 @@
 import { runWeeklyESPN, getNFLWeek } from '$lib/utils';
+import weeklySummary from '$lib/utils/weekly-summary.json';
 // import { supabase } from '$lib/supabaseClient';
-import fs from 'fs';
-import path from 'path';
 
 export async function load() {
 	try {
-		const currentWeek = getNFLWeek();
-		const filePath = path.join(process.cwd(), `weekly_summary_week_${currentWeek}.json`);
+		// const currentWeek = getNFLWeek();
 
-		// Check if the local file exists
-		if (fs.existsSync(filePath)) {
-			console.log('Using existing local file for week', currentWeek);
-			const fileData = fs.readFileSync(filePath, 'utf-8');
-			const weeklyData = JSON.parse(fileData);
-			return {
-				weeklyData
-			};
-		}
+		return {
+			weeklyData: weeklySummary
+		};
+
 		// if (!supabase) {
 		// 	throw new Error('Supabase client not initialized.');
 		// }
