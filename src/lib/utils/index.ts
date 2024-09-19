@@ -178,13 +178,11 @@ function modifyPositions(df) {
 }
 
 function determineResult(df) {
-	// Check if results have already been determined
 	if (df.every((team) => typeof team.result === 'string')) {
 		console.log('Results already determined. Skipping.');
 		return df;
 	}
 
-	// Group teams by matchup ID
 	const matchups = df.reduce((acc, team) => {
 		const matchupId = Number(team.matchupId);
 		if (!acc[matchupId]) {
@@ -194,22 +192,14 @@ function determineResult(df) {
 		return acc;
 	}, {});
 
-	// Process each matchup
 	Object.values(matchups).forEach((matchup) => {
 		if (matchup.length !== 2) {
 			console.error(`Invalid matchup: `, matchup);
 			return;
 		}
 
-		// console.log(matchup);
-
 		const [team1, team2] = matchup;
 
-		// console.log(`Matchup ${team1.matchupId}: ${team1.teamName} vs ${team2.teamName}`);
-		// console.log(`${team1.teamName}: ${team1.totalPoints} points`);
-		// console.log(`${team2.teamName}: ${team2.totalPoints} points`);
-
-		// Determine the result
 		if (team1.totalPoints > team2.totalPoints) {
 			team1.result = 'Win';
 			team2.result = 'Loss';
@@ -219,13 +209,10 @@ function determineResult(df) {
 		} else {
 			team1.result = team2.result = 'Tie';
 		}
-
-		// console.log(`Result: ${team1.teamName} ${team1.result}, ${team2.teamName} ${team2.result}\n`);
 	});
 
 	return df;
 }
-
 function transformWeekly(weeklyDf, scheduleDf) {
 	const mergedDf = scheduleDf.map((schedule) => {
 		const playerData = weeklyDf.filter((w) => w.teamId === schedule.teamId);
@@ -236,22 +223,16 @@ function transformWeekly(weeklyDf, scheduleDf) {
 				points: p.actual
 			};
 		});
-		console.log(`Players: ${playersByPosition}`);
 		return {
 			...schedule,
-			...playersByPosition
+			...playersByPosition,
+			teamName: schedule.teamName // Ensure teamName is included
 		};
 	});
 
 	const modifiedDf = mergedDf.map((team) => modifyPositions([team])[0]);
-	const resultDf = modifiedDf.map((team) => ({
-		...team,
-		result: determineResult(modifiedDf).find((r) => r.teamId === team.teamId)
-	}));
 
-	console.log(resultDf);
-
-	return resultDf;
+	return modifiedDf;
 }
 
 function highestScoringPlayerEspn(weeklyDf) {
@@ -262,23 +243,35 @@ function highestScoringPlayerEspn(weeklyDf) {
 }
 
 function highestScoringTeamEspn(weeklyDf) {
+	if (!Array.isArray(weeklyDf) || weeklyDf.length === 0) {
+		console.error('Invalid weeklyDf:', weeklyDf);
+		return ['Error', 0];
+	}
+
 	const teamScores = weeklyDf.reduce((acc, player) => {
+		if (typeof player.actual !== 'number') {
+			console.warn('Invalid player score:', player);
+			return acc;
+		}
+		if (player.owner === 'Marty Cold Cutz') {
+			console.log(player, `${acc[player.owner]} points \n\n`);
+		}
 		acc[player.owner] = (acc[player.owner] || 0) + player.actual;
 		return acc;
 	}, {});
-	const highestTeam = Object.entries(teamScores).reduce((max, [owner, score]) =>
-		score > max[1] ? [owner, score] : max
+
+	const highestTeam = Object.entries(teamScores).reduce(
+		(max, [owner, score]) => (score > max[1] ? [owner, parseFloat(score.toFixed(2))] : max),
+		['', -Infinity]
 	);
+
 	return highestTeam;
 }
 
 async function iterateWeeksEspn(year, week, standingsDf, leagueId, espnCookies) {
-	console.log('Starting iterateWeeksEspn');
 	standingsDf.forEach((team) => (team.lowestScoringTeam = 0));
-	const pointsScoredDf = [];
 
 	for (let i = 1; i <= week; i++) {
-		console.log(`Processing week ${i}`);
 		const weeklyDf = await loadWeeklyStats(year, leagueId, espnCookies, i);
 		const matchupDf = weeklyDf.reduce((acc, player) => {
 			if (!acc[player.owner]) acc[player.owner] = { owner: player.owner, actual: 0 };
@@ -290,32 +283,7 @@ async function iterateWeeksEspn(year, week, standingsDf, leagueId, espnCookies) 
 			team.actual < min.actual ? team : min
 		);
 		standingsDf.find((team) => team.owner === lowestScorer.owner).lowestScoringTeam++;
-
-		Object.values(matchupDf).forEach((team) => {
-			pointsScoredDf.push({ owner: team.owner, week: i, pointsScored: team.actual });
-		});
 	}
-
-	const medianPointsScored = Object.entries(
-		pointsScoredDf.reduce((acc, score) => {
-			if (!acc[score.owner]) acc[score.owner] = [];
-			acc[score.owner].push(score.pointsScored);
-			return acc;
-		}, {})
-	).map(([owner, scores]) => ({
-		owner,
-		modifiedMedian:
-			scores
-				.sort((a, b) => b - a)
-				.slice(0, 3)
-				.reduce((sum, score) => sum + score, 0) / 3
-	}));
-
-	console.log('Updating standings with median points');
-	standingsDf.forEach((team) => {
-		const median = medianPointsScored.find((m) => m.owner === team.owner);
-		team.modifiedMedian = median ? Math.round(median.modifiedMedian) : 0;
-	});
 
 	const sortedStandings = standingsDf.sort((a, b) => b.wins - a.wins || b.pointsFor - a.pointsFor);
 
@@ -331,7 +299,7 @@ function rankPlayoffSeeds(standingsDf) {
 	const sixthSeed = remaining.reduce((max, team) => (team.pointsFor > max.pointsFor ? team : max));
 	const seventhSeed = remaining
 		.filter((team) => team !== sixthSeed)
-		.reduce((max, team) => (team.modifiedMedian > max.modifiedMedian ? team : max));
+		.reduce((max, team) => (team.pointsFor > max.pointsFor ? team : max));
 
 	const playoffTeams = [...top5, sixthSeed, seventhSeed].map((team, index) => ({
 		...team,
@@ -358,15 +326,17 @@ async function runEspnWeekly(week = null, year = null, maxAttempts = 5) {
 
 	while (attempts < maxAttempts) {
 		try {
-			console.log(`Attempt ${attempts + 1} to load league data`);
-
 			leagueData = await loadLeague(leagueId, espnCookies, year);
 			week = week || leagueData.scoringPeriodId - 1;
-			console.log(`Week set to ${week}`);
 
 			standingsDf = loadRecords(leagueData);
 			weeklyDf = await loadWeeklyStats(year, leagueId, espnCookies, week);
 			scheduleDf = await loadSchedule(year, leagueId, espnCookies, week);
+
+			scheduleDf = scheduleDf.map((team) => ({
+				...team,
+				teamName: OWNER_DICT[team.teamId]
+			}));
 
 			matchupDf = transformWeekly(weeklyDf, scheduleDf);
 			matchupDf = determineResult(matchupDf); // Call determineResult only once
@@ -374,12 +344,7 @@ async function runEspnWeekly(week = null, year = null, maxAttempts = 5) {
 			standingsDf = await iterateWeeksEspn(year, week, standingsDf, leagueId, espnCookies);
 			standingsDf = rankPlayoffSeeds(standingsDf);
 
-			console.log(`matchupDf length: ${matchupDf.length}`);
-			console.log(`scheduleDf length: ${scheduleDf.length}`);
-			console.log(`standingsDf length: ${standingsDf.length}`);
-
 			if (matchupDf.length > 0 && scheduleDf.length > 0 && standingsDf.length > 0) {
-				console.log(`Loaded data from ESPN for week ${week} of the ${year} season`);
 				break;
 			}
 		} catch (error) {
@@ -388,9 +353,6 @@ async function runEspnWeekly(week = null, year = null, maxAttempts = 5) {
 
 		attempts++;
 		if (attempts < maxAttempts) {
-			console.log(
-				`Data not loaded correctly (Attempt ${attempts} of ${maxAttempts}), retrying in 1 second...`
-			);
 			await new Promise((resolve) => setTimeout(resolve, 1000));
 		}
 	}
@@ -403,15 +365,11 @@ async function runEspnWeekly(week = null, year = null, maxAttempts = 5) {
 
 	const [hpOwner, hpPlayer, hpScore] = highestScoringPlayerEspn(weeklyDf);
 	const [htOwner, htScore] = highestScoringTeamEspn(weeklyDf);
-	console.log('Completed processing weekly scores and standings');
 
 	return { standingsDf, matchupDf, hpOwner, hpPlayer, hpScore, htOwner, htScore };
 }
 
 async function generateSummary(week, matchupDf) {
-	console.log('Generating summary for week:', week);
-
-	// Group matchups
 	const matchups = matchupDf.reduce((acc, team) => {
 		const matchup = acc.find((m) => m.matchupId === team.matchupId);
 		if (matchup) {
@@ -422,7 +380,6 @@ async function generateSummary(week, matchupDf) {
 		return acc;
 	}, []);
 
-	// Generate overall summary
 	const overallPrompt =
 		`Week ${week} Fantasy Football Results:\n\n` +
 		matchups
@@ -435,10 +392,9 @@ async function generateSummary(week, matchupDf) {
 
 	const overallSummary = await getClaudeSummary(
 		overallPrompt,
-		"Provide a humorous and snarky overall summary of this week's fantasy football results. Focus on notable performances, upsets, and particularly low scores. Be extra snarky towards 'Bones Knows' and 'Matty Ice Tea' if they appear in the results."
+		"Provide a humorous and snarky/raunchy overall summary of this week's fantasy football results. Focus on notable performances, upsets, and particularly low scores. Be extra snarky towards 'Bones Knows' and 'Matty Ice Tea' if they appear in the results."
 	);
 
-	// Generate individual matchup summaries
 	const matchupSummaries = await Promise.all(
 		matchups.map(async (matchup) => {
 			const [team1, team2] = matchup.teams;
@@ -457,7 +413,7 @@ async function generateSummary(week, matchupDf) {
 
 			const summary = await getClaudeSummary(
 				matchupPrompt,
-				'Provide a brief, humorous summary of this matchup. Highlight standout performances and any notably bad scores. Keep it concise and entertaining.'
+				'Provide a brief, slightly sarcastic, raunchy, humorous summary of this matchup. Highlight standout performances and any notably bad scores. Keep it concise and entertaining.'
 			);
 
 			return {
@@ -471,176 +427,6 @@ async function generateSummary(week, matchupDf) {
 
 	return { overallSummary, matchupSummaries };
 }
-
-// async function runEspnWeekly(week = null, year = null, maxAttempts = 5) {
-// 	year = year || getNFLSeason();
-// 	const espnCookies = {
-// 		swid: SWID,
-// 		espn_s2: ESPN_S2
-// 	};
-// 	const leagueId = '39720439';
-
-// 	let attempts = 0;
-// 	let leagueData, standingsDf, weeklyDf, scheduleDf, matchupDf;
-
-// 	while (attempts < 1) {
-// 		// maxAttempts
-// 		try {
-// 			console.log(`Attempt ${attempts + 1} to load league data`);
-
-// 			leagueData = await loadLeague(leagueId, espnCookies, year);
-
-// 			week = week || leagueData.scoringPeriodId - 1;
-// 			console.log(`Week set to ${week}`);
-
-// 			standingsDf = loadRecords(leagueData);
-
-// 			weeklyDf = await loadWeeklyStats(year, leagueId, espnCookies, week);
-
-// 			scheduleDf = await loadSchedule(year, leagueId, espnCookies, week);
-
-// 			matchupDf = transformWeekly(weeklyDf, scheduleDf);
-
-// 			standingsDf = await iterateWeeksEspn(year, week, standingsDf, leagueId, espnCookies);
-
-// 			standingsDf = rankPlayoffSeeds(standingsDf);
-
-// 			matchupDf = standingsDf
-// 				.map((standing) => {
-// 					const matchup = matchupDf.find((m) => m.teamId === standing.teamId);
-// 					return { ...matchup, teamName: standing.teamName };
-// 				})
-// 				.sort((a, b) => a.matchupId - b.matchupId);
-
-// 			console.log(`matchupDf length: ${matchupDf.length}`);
-// 			console.log(`scheduleDf length: ${scheduleDf.length}`);
-// 			console.log(`standingsDf length: ${standingsDf.length}`);
-
-// 			if (matchupDf.length > 0 && scheduleDf.length > 0 && standingsDf.length > 0) {
-// 				console.log(`Loaded data from ESPN for week ${week} of the ${year} season`);
-// 				break;
-// 			} else {
-// 				console.log('Condition not met:');
-// 				if (matchupDf.length === 0) console.log('matchupDf is empty');
-// 				if (scheduleDf.length === 0) console.log('scheduleDf is empty');
-// 				if (standingsDf.length === 0) console.log('standingsDf is empty');
-// 			}
-// 		} catch (error) {
-// 			console.error('Error loading data:', error);
-// 			console.error('Error details:', error.message);
-// 		}
-
-// 		attempts++;
-// 		console.log(
-// 			`Data not loaded correctly (Attempt ${attempts} of ${maxAttempts}), retrying in 1 second...`
-// 		);
-// 		await new Promise((resolve) => setTimeout(resolve, 1000));
-// 	}
-
-// 	if (attempts === maxAttempts) {
-// 		throw new Error(
-// 			`Failed to load data after ${attempts} attempts. Please check your configuration.`
-// 		);
-// 	}
-
-// 	const [hpOwner, hpPlayer, hpScore] = highestScoringPlayerEspn(weeklyDf);
-// 	const [htOwner, htScore] = highestScoringTeamEspn(weeklyDf);
-// 	console.log('Completed processing weekly scores and standings');
-
-// 	matchupDf.forEach((match) => {
-// 		match.result = determineResult([match])[0];
-// 	});
-
-// 	return { standingsDf, matchupDf, hpOwner, hpPlayer, hpScore, htOwner, htScore };
-// }
-
-// async function generateSummary(week, matchupDf, standingsDf) {
-// 	console.log('Generating summary for week:', week);
-// 	console.log('Matchup Data:', matchupDf);
-
-// 	// Sort teams by total points for the week
-// 	const sortedTeams = [...matchupDf].sort((a, b) => b.totalPoints - a.totalPoints);
-
-// 	// Create a summary of the week's performances
-// 	const weekSummary = sortedTeams.map((team) => ({
-// 		teamName: team.teamName,
-// 		owner: team.owner,
-// 		totalPoints: team.totalPoints.toFixed(2),
-// 		result: team.result,
-// 		topPerformer: Object.entries(team)
-// 			.filter(([key, value]) => typeof value === 'object' && value.points)
-// 			.reduce((max, [key, value]) => (max.points > value.points ? max : value))
-// 	}));
-
-// 	const tableData = [
-// 		['Team', 'Points', 'Result', 'Top Performer'],
-// 		...weekSummary.map((team) => [
-// 			team.teamName,
-// 			team.totalPoints,
-// 			team.result,
-// 			`${team.topPerformer.player} (${team.topPerformer.points})`
-// 		])
-// 	];
-
-// 	const output = table(tableData);
-// 	console.log('Table Output:', output);
-
-// 	const inputPrompt = `Week: ${week} Results:\n\n${output}\n\nPlease provide a summary of this week's fantasy football results:`;
-
-// 	const response = await fetch('https://api.anthropic.com/v1/messages', {
-// 		method: 'POST',
-// 		headers: {
-// 			'Content-Type': 'application/json',
-// 			'X-API-Key': import.meta.env.VITE_ANTHROPIC_API_KEY,
-// 			'anthropic-version': '2023-06-01'
-// 		},
-// 		body: JSON.stringify({
-// 			model: 'claude-3-sonnet-20240229',
-// 			system:
-// 				"You are an AI Fantasy Football commissioner tasked with writing a weekly summary to your league mates recapping the latest week of Fantasy Football. Focus on the week's results, highlighting top performances, surprising outcomes, and notable player achievements. Make sure to roast the team with the lowest total points. Your tone should be funny, edgy/raunchy (like Bill Burr), light-hearted, and slightly sarcastic. Be extra snarky towards 'Bones Knows' and 'Matty Ice Tea' if they appear in the results. Sign off with a witty remark related to being an AI recap.",
-// 			messages: [
-// 				{
-// 					role: 'user',
-// 					content: inputPrompt
-// 				}
-// 			],
-// 			max_tokens: 1000
-// 		})
-// 	});
-
-// 	const data = await response.json();
-
-// 	if (!response.ok) {
-// 		console.error('API Error:', data);
-// 		throw new Error(`API request failed: ${data.error?.message || 'Unknown error'}`);
-// 	}
-
-// 	console.log('Generated the summary');
-// 	return data.content[0].text;
-// }
-// async function generateSummary(week, matchupDf, standingsDf) {
-// 	console.log('Generating summary for week:', week);
-// 	console.log('Matchup Data:', matchupDf);
-// 	console.log('Standings Data:', standingsDf);
-
-// 	const tableData = [
-// 		['Team', 'Wins', 'Losses', 'Points For', 'Points Against'],
-// 		...standingsDf.map((team) => [
-// 			team.teamName,
-// 			team.wins,
-// 			team.losses,
-// 			team.pointsFor,
-// 			team.pointsAgainst
-// 		])
-// 	];
-
-// 	console.log('Table Data:', tableData);
-
-// 	const output = table(tableData);
-// 	console.log('Table Output:', output);
-
-// 	return output;
-// }
 
 async function getClaudeSummary(prompt, systemMessage) {
 	const response = await fetch('https://api.anthropic.com/v1/messages', {
