@@ -1,10 +1,5 @@
-// fantasy-football-utils.js
-
+import { SWID, ESPN_S2, OWNER_DICT, ANTHROPIC_API_KEY } from '$env/static/private';
 import fetch from 'node-fetch';
-
-interface OwnerDict {
-	[key: string]: string;
-}
 
 interface Headers {
 	[key: string]: string;
@@ -72,27 +67,6 @@ interface Summary {
 	overallSummary: string;
 	matchupSummaries: any[];
 }
-
-const OWNER_DICT: OwnerDict = {
-	'1': 'Rotenheimer',
-	'2': 'Bones Knows',
-	'3': 'owner_name',
-	'4': 'captain beef',
-	'5': 'STROUD TO BE AN AMERICAN',
-	'6': 'owner_name',
-	'7': 'Matty Ice Tea',
-	'8': 'Marty Cold Cutz',
-	'9': 'Suce mes billes',
-	'10': 'Nutty Toilets',
-	'11': 'BIG LUMBER',
-	'12': 'Burrow This L',
-	'13': 'King of Brentwood',
-	'14': 'DaCreamist'
-};
-
-const SWID = '{36D9EA16-C2C6-4D0F-99EA-16C2C63D0F3D}'; // Replace with your SWID
-const ESPN_S2 =
-	'AEBy1OgzveID8ZS0fDUf6glSfU1css8uaI84k6utLzKfjeA6ek7njs%2BtghCLzbL%2BVFcmAIiXHdAlCdOh%2Ftp3DRdyK3Ql7CrYXkg6wQToB4iynjTBpXS%2Fu%2F9cQ4YQBwojsecRHQcmuGZQhYJmddhPtKd%2Bv0dFv%2FxriogIGbKsZBdDqk1Ja1gqEEX3TB56Qt6%2FM6Uu9kKF9pUC7LWmORhwE9%2FDBVZ8bWexNCLXC9PHQWFPXyUiWYBnmKaqjnaS3otXYuF%2BsnhLdFUOb1%2F0%2FxwXYXTtBI3d2aYoo7GOaa1P4wWrYNw%2FJVcmDHXeajp0tibwi80%3D'; // Replace with your ESPN_S2 cookie value
 
 const headers: Headers = {
 	Connection: 'keep-alive',
@@ -536,7 +510,7 @@ async function getClaudeSummary(prompt: string, systemMessage: string): Promise<
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
-			'X-API-Key': import.meta.env.VITE_ANTHROPIC_API_KEY,
+			'X-API-Key': ANTHROPIC_API_KEY,
 			'anthropic-version': '2023-06-01'
 		},
 		body: JSON.stringify({
