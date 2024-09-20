@@ -1,5 +1,38 @@
-<script>
-	export let data;
+<script lang="ts">
+	export let data: {
+		weeklyData?: {
+			week: number;
+			summary: {
+				overallSummary: string;
+				matchupSummaries: {
+					team1: string;
+					team2: string;
+					summary: string;
+					matchupId: number;
+				}[];
+			};
+			highestScoringPlayer: {
+				player: string;
+				owner: string;
+				score: number;
+			};
+			highestScoringTeam: {
+				owner: string;
+				score: number;
+			};
+			matchups: {
+				matchupId: number;
+				teamName: string;
+				totalPoints: number;
+				result: 'Win' | 'Loss';
+			}[];
+			standings: {
+				[key: string]: string | number;
+			}[];
+		};
+		error?: string;
+	};
+
 	const { weeklyData, error } = data;
 </script>
 

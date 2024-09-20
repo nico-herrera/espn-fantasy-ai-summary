@@ -34,7 +34,7 @@
 	"type": "module",
 	"dependencies": {
 		"@anthropic-ai/sdk": "^0.27.3",
-		"@supabase/supabase-js": "^2.45.4",
+		"mongodb": "^6.9.0",
 		"table": "^6.8.2"
 	}
 }
