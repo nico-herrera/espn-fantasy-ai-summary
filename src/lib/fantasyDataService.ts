@@ -76,6 +76,8 @@ export async function getFantasyData() {
 		const collection = db.collection(COLLECTION_NAME);
 		const currentWeek = getNFLWeek();
 
+		console.log(currentWeek, 'current week');
+
 		let data = await collection.findOne<WeeklyDataWithId>({ week: currentWeek });
 		if (!data) {
 			const newData = await updateFantasyData();
