@@ -8,8 +8,8 @@ To set up the project:
 
 ```bash
 # Clone the repository
-git clone https://github.com/nico-herrera/espn-fantasy-football-summary.git
-cd espn-fantasy-football-summary
+git clone https://github.com/nico-herrera/espn-fantasy-ai-summary.git
+cd espn-fantasy-ai-summary
 
 # Install dependencies
 npm install
