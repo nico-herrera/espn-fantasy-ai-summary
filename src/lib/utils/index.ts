@@ -541,7 +541,6 @@ async function runWeeklyESPN(week: number): Promise<any> {
 
 		const summary = await generateSummary(week, matchupDf);
 
-		// Instead of sending an email, return an object with all the relevant data
 		return {
 			week,
 			summary,
