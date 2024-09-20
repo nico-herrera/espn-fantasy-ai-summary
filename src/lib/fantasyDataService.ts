@@ -1,6 +1,7 @@
 import { MongoClient, ServerApiVersion } from 'mongodb';
 import { runWeeklyESPN, getNFLWeek } from '$lib/utils';
-import { MONGODB_URI, DB_NAME, COLLECTION_NAME } from '$root/config.json';
+// import { MONGODB_URI, DB_NAME, COLLECTION_NAME } from '$root/config.json'; // use for local, no web deployment
+import { MONGODB_URI, DB_NAME, COLLECTION_NAME } from '$env/static/private'; // using envs for web deployment
 
 const client = new MongoClient(MONGODB_URI, {
 	serverApi: {
