@@ -95,10 +95,7 @@ The MongoDB connection is configured using the `MONGODB_URI` from your environme
 
 ## Weekly Summary Generation
 
-The weekly summary generation is handled automatically by the application. There's no separate command to run for generating summaries manually. The process is typically triggered by:
-
-1. A scheduled task (e.g., a cron job) that hits the update API endpoint
-2. User interactions within the application that require fresh data
+The weekly summary generation is handled automatically by the application through a cron job. The cron job runs every Tuesday at midnight CST, triggering the update process to pull the newest data.
 
 ## API Endpoint
 
