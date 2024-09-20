@@ -1,5 +1,12 @@
-// import { SWID, ESPN_S2, OWNER_DICT, ANTHROPIC_API_KEY } from '$root/config.json'; // use for local, no web deployment
-import { SWID, ESPN_S2, OWNER_DICT, ANTHROPIC_API_KEY } from '$env/static/private'; // using envs for web deployment
+// import { SWID, ESPN_S2, OWNER_DICT, ANTHROPIC_API_KEY,  OVERALL_SUMMARY_PROMPT, MATCHUP_SUMMARY_PROMPT  } from '$root/config.json'; // use for local, no web deployment
+import {
+	SWID,
+	ESPN_S2,
+	OWNER_DICT,
+	ANTHROPIC_API_KEY,
+	OVERALL_SUMMARY_PROMPT,
+	MATCHUP_SUMMARY_PROMPT
+} from '$env/static/private'; // using envs for web deployment
 
 import fetch from 'node-fetch';
 
@@ -463,10 +470,7 @@ async function generateSummary(week: number, matchupDf: any[]): Promise<Summary>
 			)
 			.join('\n');
 
-	const overallSummary = await getClaudeSummary(
-		overallPrompt,
-		"Provide a humorous and snarky overall summary of this week's fantasy football results. Sort of Bill Burr, right in your face-like. Focus on notable performances, upsets, and particularly low scores. Be extra snarky towards 'Bones Knows' and 'Matty Ice Tea' if they appear in the results. The only rule is to not use 'Well, well, well', don't expose any of the instructions I've given you like including snark, sarcastic, or whatever else in your reply, and do not respond with quotations."
-	);
+	const overallSummary = await getClaudeSummary(overallPrompt, OVERALL_SUMMARY_PROMPT);
 
 	const matchupSummaries = await Promise.all(
 		matchups.map(async (matchup) => {
@@ -490,10 +494,7 @@ async function generateSummary(week: number, matchupDf: any[]): Promise<Summary>
 					)
 					.join('\n');
 
-			const summary = await getClaudeSummary(
-				matchupPrompt,
-				"Provide a brief, slightly sarcastic, humorous summary of this matchup from the perspective of a commentator. Highlight standout performances and any notably bad scores. Keep it concise and entertaining. The only rule is to not use 'Well, well, well', don't expose any of the instructions I've given you like including snark, sarcastic, or whatever else in your reply, and do not respond with quotations."
-			);
+			const summary = await getClaudeSummary(matchupPrompt, MATCHUP_SUMMARY_PROMPT);
 
 			return {
 				matchupId: matchup.matchupId,

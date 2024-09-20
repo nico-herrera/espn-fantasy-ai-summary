@@ -6,6 +6,8 @@
   "CRON_SECRET": "your_cron_secret_here",
   "SWID": "your_swid_here",
   "ESPN_S2": "your_espn_s2_here",
+  "OVERALL_SUMMARY_PROMPT": "Example overall summary prompt text here.",
+  "MATCHUP_SUMMARY_PROMPT": "Example matchup summary prompt text here.",
   "OWNER_DICT": {
     "1": "owner_1",
     "2": "owner_2",

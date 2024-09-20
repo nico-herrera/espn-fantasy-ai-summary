@@ -61,6 +61,8 @@ For deployment, set the following environment variables:
 - `SWID`
 - `ESPN_S2`
 - `OWNER_DICT` (as a JSON string)
+- `OVERALL_SUMMARY_PROMPT`
+- `MATCHUP_SUMMARY_PROMPT`
 
 ### Local Configuration
 
@@ -75,6 +77,8 @@ For local development, you can use a `config.json` file. Create this file in the
 	"CRON_SECRET": "your_cron_secret",
 	"SWID": "your_espn_swid",
 	"ESPN_S2": "your_espn_s2_cookie",
+	"OVERALL_SUMMARY_PROMPT": "Example overall summary prompt text here.",
+	"MATCHUP_SUMMARY_PROMPT": "Example matchup summary prompt text here.",
 	"OWNER_DICT": {
 		"1": "Owner1Name",
 		"2": "Owner2Name"
