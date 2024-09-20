@@ -120,7 +120,12 @@ function getNFLWeek(): number {
 		(today.getTime() - kickoff.getTime()) / (1000 * 60 * 60 * 24)
 	);
 	const weeksSinceKickoff = Math.floor(daysSinceKickoff / 7);
-	return weeksSinceKickoff + 1;
+
+	// Adjust for the day of the week (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+	const dayOfWeek = today.getDay();
+	const isTuesdayOrLater = dayOfWeek >= 2;
+
+	return weeksSinceKickoff + (isTuesdayOrLater ? 1 : 0);
 }
 
 function getNFLSeason(): number {
