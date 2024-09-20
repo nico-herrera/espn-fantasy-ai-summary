@@ -519,8 +519,7 @@ async function getClaudeSummary(prompt: string, systemMessage: string): Promise<
 		body: JSON.stringify({
 			model: 'claude-3-sonnet-20240229',
 			system: systemMessage,
-			messages: [{ role: 'user', content: prompt }],
-			max_tokens: 300
+			messages: [{ role: 'user', content: prompt }]
 		})
 	});
 
