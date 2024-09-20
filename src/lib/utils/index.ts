@@ -1,4 +1,6 @@
-import { SWID, ESPN_S2, OWNER_DICT, ANTHROPIC_API_KEY } from '$env/static/private';
+import config from '$root/config.json';
+const { SWID, ESPN_S2, OWNER_DICT, ANTHROPIC_API_KEY } = config;
+
 import fetch from 'node-fetch';
 
 interface Headers {

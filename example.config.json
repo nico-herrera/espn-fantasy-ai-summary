@@ -1,0 +1,22 @@
+{
+  "ANTHROPIC_API_KEY": "your_key_here",
+  "MONGODB_URI": "your_mongodb_uri_here",
+  "COLLECTION_NAME": "your_collection_name_here",
+  "DB_NAME": "your_db_name_here",
+  "CRON_SECRET": "your_cron_secret_here",
+  "SWID": "your_swid_here",
+  "ESPN_S2": "your_espn_s2_here",
+  "OWNER_DICT": {
+    "1": "owner_1",
+    "2": "owner_2",
+    "4": "owner_4",
+    "5": "owner_5",
+    "7": "owner_7",
+    "8": "owner_8",
+    "9": "owner_9",
+    "10": "owner_10",
+    "11": "owner_11",
+    "12": "owner_12"
+  }
+}
+

@@ -1,6 +1,7 @@
 import { MongoClient, ServerApiVersion } from 'mongodb';
 import { runWeeklyESPN, getNFLWeek } from '$lib/utils';
-import { MONGODB_URI, DB_NAME, COLLECTION_NAME } from '$env/static/private';
+import config from '$root/config.json';
+const { MONGODB_URI, DB_NAME, COLLECTION_NAME } = config;
 
 const client = new MongoClient(MONGODB_URI, {
 	serverApi: {
