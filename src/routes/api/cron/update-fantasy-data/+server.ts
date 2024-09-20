@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import { updateFantasyData } from '$lib/fantasyDataService';
-import { CRON_SECRET } from '$env/static/private';
+import { CRON_SECRET } from '$root/config.json';
 
 export async function GET({ request }) {
 	const authHeader = request.headers.get('authorization');

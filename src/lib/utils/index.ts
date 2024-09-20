@@ -1,6 +1,4 @@
-import config from '$root/config.json';
-const { SWID, ESPN_S2, OWNER_DICT, ANTHROPIC_API_KEY } = config;
-
+import { SWID, ESPN_S2, OWNER_DICT, ANTHROPIC_API_KEY } from '$root/config.json';
 import fetch from 'node-fetch';
 
 interface Headers {
