@@ -1,8 +1,8 @@
-import { getFantasyData } from '$lib/fantasyDataService';
+import { getLatestFantasyData } from '$lib/fantasyDataService';
 
 export async function load() {
 	try {
-		const weeklyData = await getFantasyData();
+		const weeklyData = await getLatestFantasyData();
 		return { weeklyData };
 	} catch (error) {
 		console.error('Error loading fantasy data:', error);

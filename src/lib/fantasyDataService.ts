@@ -27,7 +27,7 @@ interface WeeklyData {
 		score: number;
 	};
 	highestScoringTeam: {
-		owner: string; // Ensure this is always a string
+		owner: string;
 		score: number;
 	};
 	matchups: {
@@ -45,6 +45,35 @@ interface WeeklyDataWithId extends WeeklyData {
 	_id: string;
 }
 
+export async function getLatestFantasyData(): Promise<WeeklyDataWithId | null> {
+	try {
+		await client.connect();
+		const db = client.db(DB_NAME);
+		const collection = db.collection(COLLECTION_NAME);
+
+		// Find the latest record by sorting in descending order of week and limiting to 1
+		const latestData = await collection
+			.find<WeeklyDataWithId>({})
+			.sort({ week: -1 })
+			.limit(1)
+			.toArray();
+
+		if (latestData.length === 0) {
+			console.log('No data found in the weekly-summaries table');
+			return null;
+		}
+
+		const data = latestData[0];
+		return {
+			...data,
+			_id: data._id.toString()
+		};
+	} finally {
+		await client.close();
+	}
+}
+
+// Legacy function, for wanting to update data
 export async function updateFantasyData(): Promise<WeeklyDataWithId | null> {
 	try {
 		await client.connect();
@@ -52,42 +81,12 @@ export async function updateFantasyData(): Promise<WeeklyDataWithId | null> {
 		const collection = db.collection(COLLECTION_NAME);
 		const currentWeek = getNFLWeek();
 
-		const existingData = await collection.findOne<WeeklyDataWithId>({ week: currentWeek });
-		if (existingData) {
-			console.log('Data already exists for week', currentWeek);
-			return existingData;
-		}
-
 		console.log('Generating new data for week', currentWeek);
 		const weeklyData = await runWeeklyESPN(currentWeek);
 		const result = await collection.insertOne(weeklyData);
 		console.log('New data saved to MongoDB');
 
 		return { ...weeklyData, _id: result.insertedId.toString() };
-	} finally {
-		await client.close();
-	}
-}
-
-export async function getFantasyData() {
-	try {
-		await client.connect();
-		const db = client.db(DB_NAME);
-		const collection = db.collection(COLLECTION_NAME);
-		const currentWeek = getNFLWeek();
-
-		console.log(currentWeek, 'current week');
-
-		let data = await collection.findOne<WeeklyDataWithId>({ week: currentWeek });
-		if (!data) {
-			const newData = await updateFantasyData();
-			data = { ...newData, _id: newData._id.toString() };
-		}
-
-		return {
-			...data,
-			_id: data._id.toString()
-		};
 	} finally {
 		await client.close();
 	}
