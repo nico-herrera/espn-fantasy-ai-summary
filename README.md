@@ -1,26 +1,57 @@
 # ESPN Fantasy Football Summary Generator
 
-This project generates weekly summaries for an ESPN Fantasy Football league, including highest scoring players, teams, and detailed matchup summaries. The summaries are generated using AI and stored in a MongoDB database.
+This SvelteKit project generates weekly summaries for an ESPN Fantasy Football league, including highest scoring players, teams, and detailed matchup summaries. The summaries are generated using AI and stored in a MongoDB database.
 
-## Creating a project
+## Project Setup
 
-To create a new project, use the following commands:
+To set up the project:
 
-## Developing
+```bash
+# Clone the repository
+git clone https://github.com/nico-herrera/espn-fantasy-football-summary.git
+cd espn-fantasy-football-summary
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+# Install dependencies
+npm install
+```
 
-## Building
+## Development
+
+To start the development server:
+
+```bash
+npm run dev
+
+# or start the server and open the app in a new browser tab
+npm run dev -- --open
+```
+
+The app will be available at `http://localhost:5173`.
+
+## Building for Production
 
 To create a production version of your app:
 
-You can preview the production build with `npm run preview`.
+```bash
+npm run build
+```
 
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
+Preview the production build with:
 
-## Environment Variables
+```bash
+npm run preview
+```
 
-Ensure you have the following environment variables set up in your `.env` file:
+## Configuration
+
+This project supports two methods of configuration:
+
+1. Environment variables (recommended for deployment)
+2. Local `config.json` file (convenient for local development)
+
+### Environment Variables
+
+For deployment, set the following environment variables:
 
 - `ANTHROPIC_API_KEY`
 - `MONGODB_URI`
@@ -29,32 +60,62 @@ Ensure you have the following environment variables set up in your `.env` file:
 - `CRON_SECRET`
 - `SWID`
 - `ESPN_S2`
-- `OWNER_DICT`
-
-Refer to the `env.example` file for the structure of these variables.
+- `OWNER_DICT` (as a JSON string)
 
 ### Local Configuration
 
-If you prefer to use a local configuration file instead of environment variables, create a `config.json` file in the root directory with the following structure:
+For local development, you can use a `config.json` file. Create this file in the root directory with the following structure:
 
-Refer to the `example.config.json` file for the structure of these variables.
+```json
+{
+	"ANTHROPIC_API_KEY": "your_anthropic_api_key",
+	"MONGODB_URI": "your_mongodb_uri",
+	"COLLECTION_NAME": "weekly-summaries",
+	"DB_NAME": "fantasy-football",
+	"CRON_SECRET": "your_cron_secret",
+	"SWID": "your_espn_swid",
+	"ESPN_S2": "your_espn_s2_cookie",
+	"OWNER_DICT": {
+		"1": "Owner1Name",
+		"2": "Owner2Name"
+		// ... add all owner mappings
+	}
+}
+```
+
+**Important:** Do not commit your `config.json` file to version control. Add it to your `.gitignore` file to prevent accidentally exposing sensitive information.
 
 ## MongoDB Configuration
 
-The MongoDB connection is configured in the `src/lib/fantasyDataService.ts` file. Ensure your MongoDB URI and other related configurations are correctly set.
+The MongoDB connection is configured using the `MONGODB_URI` from your environment variables or `config.json` file. Ensure this URI is correct and that you have the necessary permissions to access the database.
 
-## Running the Weekly Summary
+## Weekly Summary Generation
 
-To generate the weekly summary, use the `runWeeklyESPN` function. This function fetches the latest data, processes it, and stores it in MongoDB.
+The weekly summary generation is handled automatically by the application. There's no separate command to run for generating summaries manually. The process is typically triggered by:
+
+1. A scheduled task (e.g., a cron job) that hits the update API endpoint
+2. User interactions within the application that require fresh data
 
 ## API Endpoint
 
-An API endpoint is set up to update the fantasy data via a cron job. The endpoint is protected with a secret key.
+An API endpoint is available to update the fantasy data. It's protected with the secret key specified in `CRON_SECRET`.
+
+To test the API endpoint locally:
+
+```bash
+curl -X POST http://localhost:5173/api/update-fantasy-data -H "Authorization: Bearer your_cron_secret"
+```
+
+Replace `your_cron_secret` with the actual secret from your configuration.
 
 ## Frontend
 
-The frontend is built using Svelte and displays the weekly summary, highest scoring players, teams, matchups, and standings.
+The frontend is built with SvelteKit and displays the weekly summary, highest scoring players, teams, matchups, and standings.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
