@@ -409,29 +409,28 @@ async function runEspnWeekly(
 			leagueData = await loadLeague(leagueId, espnCookies, year);
 			week = week || leagueData.scoringPeriodId - 1;
 
-			// Parallelize independent tasks
-			const [weeklyStats, schedule] = await Promise.all([
-				loadWeeklyStats(year, leagueId, espnCookies, week),
-				loadSchedule(year, leagueId, espnCookies, week)
-			]);
+			console.log('Loading weekly stats with params:', { year, leagueId, week });
+			weeklyDf = await loadWeeklyStats(year, leagueId, espnCookies, week);
+			console.log('Weekly stats loaded:', weeklyDf);
 
-			console.log('Weekly Stats:', weeklyStats);
-			console.log('Schedule:', schedule);
+			console.log('Loading schedule with params:', { year, leagueId, week });
+			scheduleDf = await loadSchedule(year, leagueId, espnCookies, week);
+			console.log('Schedule loaded:', scheduleDf);
 
-			standingsDf = loadRecords(leagueData);
-			weeklyDf = weeklyStats;
-			scheduleDf = schedule.map((team) => ({
+			console.log('Mapping team names using OWNER_DICT');
+			scheduleDf = scheduleDf.map((team) => ({
 				...team,
 				teamName: OWNER_DICT[team.teamId]
 			}));
+			console.log('Schedule after mapping team names:', scheduleDf);
 
-			console.log('Schedule with Team Names:', scheduleDf);
-
+			console.log('Transforming weekly data');
 			matchupDf = transformWeekly(weeklyDf, scheduleDf);
-			console.log('Transformed Weekly Data:', matchupDf);
+			console.log('Weekly data transformed:', matchupDf);
 
+			console.log('Determining results for matchups');
 			matchupDf = determineResult(matchupDf);
-			console.log('Matchup Results:', matchupDf);
+			console.log('Results determined:', matchupDf);
 
 			standingsDf = await iterateWeeksEspn(year, week, standingsDf, leagueId, espnCookies);
 			standingsDf = rankPlayoffSeeds(standingsDf);
