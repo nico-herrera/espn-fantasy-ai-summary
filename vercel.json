@@ -1,6 +1,6 @@
 {
     "crons": [{
       "path": "/api/cron/update-fantasy-data",
-      "schedule": "0 20 * * 2"
+      "schedule": "0 16 * * 2"
     }]
   }
