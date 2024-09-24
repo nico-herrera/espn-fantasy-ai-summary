@@ -415,6 +415,9 @@ async function runEspnWeekly(
 				loadSchedule(year, leagueId, espnCookies, week)
 			]);
 
+			console.log('Weekly Stats:', weeklyStats);
+			console.log('Schedule:', schedule);
+
 			standingsDf = loadRecords(leagueData);
 			weeklyDf = weeklyStats;
 			scheduleDf = schedule.map((team) => ({
@@ -422,8 +425,13 @@ async function runEspnWeekly(
 				teamName: OWNER_DICT[team.teamId]
 			}));
 
+			console.log('Schedule with Team Names:', scheduleDf);
+
 			matchupDf = transformWeekly(weeklyDf, scheduleDf);
+			console.log('Transformed Weekly Data:', matchupDf);
+
 			matchupDf = determineResult(matchupDf);
+			console.log('Matchup Results:', matchupDf);
 
 			standingsDf = await iterateWeeksEspn(year, week, standingsDf, leagueId, espnCookies);
 			standingsDf = rankPlayoffSeeds(standingsDf);
