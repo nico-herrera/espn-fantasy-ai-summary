@@ -1,6 +1,11 @@
 {
-    "crons": [{
-      "path": "/api/cron/update-fantasy-data",
-      "schedule": "0 16 * * 2"
-    }]
+  "crons": [{
+    "path": "/api/cron/update-fantasy-data",
+    "schedule": "0 16 * * 2"
+  }],
+  "functions": {
+    "api/cron/update-fantasy-data": {
+      "maxDuration": 60
+    }
   }
+}
