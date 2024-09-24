@@ -409,11 +409,15 @@ async function runEspnWeekly(
 			leagueData = await loadLeague(leagueId, espnCookies, year);
 			week = week || leagueData.scoringPeriodId - 1;
 
-			standingsDf = loadRecords(leagueData);
-			weeklyDf = await loadWeeklyStats(year, leagueId, espnCookies, week);
-			scheduleDf = await loadSchedule(year, leagueId, espnCookies, week);
+			// Parallelize independent tasks
+			const [weeklyStats, schedule] = await Promise.all([
+				loadWeeklyStats(year, leagueId, espnCookies, week),
+				loadSchedule(year, leagueId, espnCookies, week)
+			]);
 
-			scheduleDf = scheduleDf.map((team) => ({
+			standingsDf = loadRecords(leagueData);
+			weeklyDf = weeklyStats;
+			scheduleDf = schedule.map((team) => ({
 				...team,
 				teamName: OWNER_DICT[team.teamId]
 			}));
