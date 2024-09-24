@@ -423,7 +423,7 @@ async function runEspnWeekly(
 			}));
 
 			matchupDf = transformWeekly(weeklyDf, scheduleDf);
-			matchupDf = determineResult(matchupDf); // Call determineResult only once
+			matchupDf = determineResult(matchupDf);
 
 			standingsDf = await iterateWeeksEspn(year, week, standingsDf, leagueId, espnCookies);
 			standingsDf = rankPlayoffSeeds(standingsDf);
