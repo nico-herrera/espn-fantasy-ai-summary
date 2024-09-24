@@ -10,6 +10,8 @@ import {
 
 import fetch from 'node-fetch';
 
+const OWNER_DICT_PARSED = JSON.parse(OWNER_DICT || '{}');
+
 interface Headers {
 	[key: string]: string;
 }
@@ -148,7 +150,7 @@ function loadRecords(leagueData: LeagueData): RecordData[] {
 		pointsAgainst: team.record.overall.pointsAgainst
 	}));
 
-	const ownerDict = OWNER_DICT;
+	const ownerDict = OWNER_DICT_PARSED;
 	recordData.forEach((record) => {
 		record.owner = ownerDict[record.teamId];
 	});
@@ -184,7 +186,7 @@ async function loadWeeklyStats(
 	espnCookies: Cookies,
 	week: number
 ): Promise<WeeklyStats[]> {
-	const ownerDict = OWNER_DICT;
+	const ownerDict = OWNER_DICT_PARSED;
 
 	const url = `https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/${year}/segments/0/leagues/${leagueId}?view=mMatchup&view=mMatchupScore`;
 
@@ -363,15 +365,22 @@ async function iterateWeeksEspn(
 }
 
 function rankPlayoffSeeds(standingsDf: any[]): any[] {
+	if (standingsDf.length === 0) {
+		return standingsDf; // Return early if standingsDf is empty
+	}
+
 	const sortedStandings = [...standingsDf].sort(
 		(a, b) => b.wins - a.wins || b.pointsFor - a.pointsFor
 	);
 	const top5 = sortedStandings.slice(0, 5);
 	const remaining = sortedStandings.slice(5);
-	const sixthSeed = remaining.reduce((max, team) => (team.pointsFor > max.pointsFor ? team : max));
+	const sixthSeed = remaining.reduce(
+		(max, team) => (team.pointsFor > max.pointsFor ? team : max),
+		remaining[0]
+	);
 	const seventhSeed = remaining
 		.filter((team) => team !== sixthSeed)
-		.reduce((max, team) => (team.pointsFor > max.pointsFor ? team : max));
+		.reduce((max, team) => (team.pointsFor > max.pointsFor ? team : max), remaining[0]);
 
 	const playoffTeams = [...top5, sixthSeed, seventhSeed].map((team, index) => ({
 		...team,
@@ -388,7 +397,7 @@ function rankPlayoffSeeds(standingsDf: any[]): any[] {
 async function runEspnWeekly(
 	week: number | null = null,
 	year: number | null = null,
-	maxAttempts: number = 5
+	maxAttempts: number = 1
 ): Promise<any> {
 	year = year || getNFLSeason();
 	const espnCookies: Cookies = {
@@ -407,30 +416,22 @@ async function runEspnWeekly(
 	while (attempts < maxAttempts) {
 		try {
 			leagueData = await loadLeague(leagueId, espnCookies, year);
+			standingsDf = loadRecords(leagueData);
+
 			week = week || leagueData.scoringPeriodId - 1;
 
-			console.log('Loading weekly stats with params:', { year, leagueId, week });
-			weeklyDf = await loadWeeklyStats(year, leagueId, espnCookies, week);
-			console.log('Weekly stats loaded:', weeklyDf);
+			[weeklyDf, scheduleDf] = await Promise.all([
+				loadWeeklyStats(year, leagueId, espnCookies, week),
+				loadSchedule(year, leagueId, espnCookies, week)
+			]);
 
-			console.log('Loading schedule with params:', { year, leagueId, week });
-			scheduleDf = await loadSchedule(year, leagueId, espnCookies, week);
-			console.log('Schedule loaded:', scheduleDf);
-
-			console.log('Mapping team names using OWNER_DICT');
 			scheduleDf = scheduleDf.map((team) => ({
 				...team,
-				teamName: OWNER_DICT[team.teamId]
+				teamName: OWNER_DICT_PARSED[team.teamId]
 			}));
-			console.log('Schedule after mapping team names:', scheduleDf);
 
-			console.log('Transforming weekly data');
 			matchupDf = transformWeekly(weeklyDf, scheduleDf);
-			console.log('Weekly data transformed:', matchupDf);
-
-			console.log('Determining results for matchups');
 			matchupDf = determineResult(matchupDf);
-			console.log('Results determined:', matchupDf);
 
 			standingsDf = await iterateWeeksEspn(year, week, standingsDf, leagueId, espnCookies);
 			standingsDf = rankPlayoffSeeds(standingsDf);
@@ -439,7 +440,7 @@ async function runEspnWeekly(
 				break;
 			}
 		} catch (error) {
-			console.error('Error loading data:', error);
+			console.error(`Error loading data on attempt ${attempts + 1}:`, error);
 		}
 
 		attempts++;

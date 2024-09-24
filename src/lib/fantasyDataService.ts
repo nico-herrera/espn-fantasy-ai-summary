@@ -1,7 +1,7 @@
 import { MongoClient, ServerApiVersion } from 'mongodb';
 import { runWeeklyESPN, getNFLWeek } from '$lib/utils';
 // import { MONGODB_URI, DB_NAME, COLLECTION_NAME } from '$root/config.json'; // use for local, no web deployment
-import { MONGODB_URI, DB_NAME, COLLECTION_NAME } from '$env/static/private'; // using envs for web deployment
+import { MONGODB_URI, DB_NAME, COLLECTION_NAME, CRON_SECRET } from '$env/static/private'; // using envs for web deployment
 
 const client = new MongoClient(MONGODB_URI, {
 	serverApi: {
@@ -91,4 +91,20 @@ export async function updateFantasyData(): Promise<WeeklyDataWithId | null> {
 	} finally {
 		await client.close();
 	}
+}
+
+// Function to call the cron API
+export async function callCronUpdateFantasyData(fetch: typeof globalThis.fetch): Promise<void> {
+	const response = await fetch('/api/cron/update-fantasy-data', {
+		method: 'GET',
+		headers: {
+			Authorization: `Bearer ${CRON_SECRET}`
+		}
+	});
+
+	if (!response.ok) {
+		throw new Error('Failed to update fantasy data via cron API');
+	}
+
+	console.log('Fantasy data updated successfully via cron API');
 }
