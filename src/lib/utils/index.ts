@@ -101,14 +101,20 @@ const eligiblePositions: EligiblePositions = {
 function getNFLWeek(): number {
 	const today = new Date();
 	const kickoff = new Date(2024, 8, 6); // Note: month is 0-indexed in JavaScript
+
+	// Convert current time to CST (UTC-6)
+	const utcOffset = today.getTimezoneOffset() * 60000; // Convert minutes to milliseconds
+	const cstOffset = 6 * 60 * 60000; // CST is UTC-6
+	const cstTime = new Date(today.getTime() + utcOffset - cstOffset);
+
 	const daysSinceKickoff = Math.floor(
-		(today.getTime() - kickoff.getTime()) / (1000 * 60 * 60 * 24)
+		(cstTime.getTime() - kickoff.getTime()) / (1000 * 60 * 60 * 24)
 	);
 	const weeksSinceKickoff = Math.floor(daysSinceKickoff / 7);
 
-	// Adjust for the day of the week (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
-	const dayOfWeek = today.getDay();
-	const isTuesdayOrLater = dayOfWeek >= 2;
+	// Adjust for the day of the week and time in CST (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+	const dayOfWeek = cstTime.getDay();
+	const isTuesdayOrLater = dayOfWeek > 2 || (dayOfWeek === 2 && cstTime.getHours() >= 0);
 
 	return weeksSinceKickoff + (isTuesdayOrLater ? 1 : 0);
 }
