@@ -102,19 +102,14 @@ function getNFLWeek(): number {
 	const today = new Date();
 	const kickoff = new Date(2024, 8, 6); // Note: month is 0-indexed in JavaScript
 
-	// Convert current time to CST (UTC-6)
-	const utcOffset = today.getTimezoneOffset() * 60000; // Convert minutes to milliseconds
-	const cstOffset = 6 * 60 * 60000; // CST is UTC-6
-	const cstTime = new Date(today.getTime() + utcOffset - cstOffset);
-
 	const daysSinceKickoff = Math.floor(
-		(cstTime.getTime() - kickoff.getTime()) / (1000 * 60 * 60 * 24)
+		(today.getTime() - kickoff.getTime()) / (1000 * 60 * 60 * 24)
 	);
 	const weeksSinceKickoff = Math.floor(daysSinceKickoff / 7);
 
-	// Adjust for the day of the week and time in CST (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
-	const dayOfWeek = cstTime.getDay();
-	const isTuesdayOrLater = dayOfWeek > 2 || (dayOfWeek === 2 && cstTime.getHours() >= 0);
+	// Adjust for the day of the week (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+	const dayOfWeek = today.getDay();
+	const isTuesdayOrLater = dayOfWeek > 2 || (dayOfWeek === 2 && today.getHours() >= 0);
 
 	return weeksSinceKickoff + (isTuesdayOrLater ? 1 : 0);
 }
@@ -226,7 +221,6 @@ async function loadWeeklyStats(
 			lineupSlot: eligiblePositions[item.lineupSlot]
 		}))
 		.filter((item: any) => item.lineupSlot && item.lineupSlot !== 'Bench');
-
 	return weeklyDf;
 }
 
@@ -350,6 +344,7 @@ async function iterateWeeksEspn(
 
 	for (let i = 1; i <= week; i++) {
 		const weeklyDf = await loadWeeklyStats(year, leagueId, espnCookies, i);
+
 		const matchupDf = weeklyDf.reduce(
 			(acc, player) => {
 				if (!acc[player.owner]) acc[player.owner] = { owner: player.owner, actual: 0 };
@@ -358,7 +353,6 @@ async function iterateWeeksEspn(
 			},
 			{} as { [key: string]: { owner: string; actual: number } }
 		);
-
 		const lowestScorer = Object.values(matchupDf).reduce((min, team) =>
 			team.actual < min.actual ? team : min
 		);
@@ -493,6 +487,7 @@ async function generateSummary(week: number, matchupDf: any[]): Promise<Summary>
 	const matchupSummaries = await Promise.all(
 		matchups.map(async (matchup) => {
 			const [team1, team2] = matchup.teams;
+
 			const matchupPrompt =
 				`Matchup: ${team1.teamName} (${team1.totalPoints.toFixed(2)}) vs ${team2.teamName} (${team2.totalPoints.toFixed(2)})\n\n` +
 				`${team1.teamName} top performers:\n` +
