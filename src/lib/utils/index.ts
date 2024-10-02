@@ -283,7 +283,13 @@ function transformWeekly(weeklyDf: any[], scheduleDf: any[]): any[] {
 		const playerData = weeklyDf.filter((w) => w.teamId === schedule.teamId);
 		const playersByPosition: { [key: string]: { player: string; points: number } } = {};
 		playerData.forEach((p) => {
-			playersByPosition[p.lineupSlot] = {
+			let positionKey = p.lineupSlot;
+			let count = 1;
+			while (playersByPosition[positionKey]) {
+				positionKey = `${p.lineupSlot}${count}`;
+				count++;
+			}
+			playersByPosition[positionKey] = {
 				player: p.player,
 				points: p.actual
 			};
