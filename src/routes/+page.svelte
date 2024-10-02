@@ -61,13 +61,13 @@
 					<span class="font-bold">{weeklyData.highestScoringPlayer.score.toFixed(2)} points</span>
 				</p>
 			</div>
-			<div class="bg-green-900 rounded-lg p-4">
+			<!-- <div class="bg-green-900 rounded-lg p-4">
 				<h3 class="text-xl font-semibold mb-2">Highest Scoring Team</h3>
 				<p class="text-green-300">
 					{weeklyData.highestScoringTeam.owner}:
 					<span class="font-bold">{weeklyData.highestScoringTeam.score.toFixed(2)} points</span>
 				</p>
-			</div>
+			</div> -->
 		</div>
 
 		<div class="mb-8">
